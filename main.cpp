@@ -6,6 +6,39 @@
 
 using namespace std;
 
+// Функция для простого хэширования пароля
+unsigned int simple_hash(const string& str) {
+    unsigned int hash = 0;
+    for (char c : str) {
+        hash = hash * 31 + c; // Хэширование с помощью умножения и сложения
+    }
+    return hash;
+}
+
+// Функция для проверки пароля
+bool is_password_correct() {
+    const string correct_password = "mypassword";  // Постоянный пароль
+    int attempts = 0;
+    const int max_attempts = 3;
+
+    while (attempts < max_attempts) {
+        string input_password;
+        cout << "Enter your password: ";
+        cin >> input_password;
+
+        if (input_password == correct_password) {  // Сравниваем введенный пароль с правильным
+            cout << "Access granted!\n";
+            return true;
+        } else {
+            attempts++;
+            cout << "Wrong password! Number of attempts: " << (max_attempts - attempts) << "\n";
+        }
+    }
+
+    cout << "The number of attempts has been exceeded. Access denied!\n";
+    return false;
+}
+
 // Функция для шифрования/дешифрования методом Атбаш
 string atbash(const string& text) {
     string result;
@@ -68,6 +101,11 @@ int main() {
     // Устанавливаем кодировку консоли для корректного отображения русских символов
     SetConsoleCP(1251);
     SetConsoleOutputCP(1251);
+
+    // Проверка пароля
+    if (!is_password_correct()) {
+        return 0; // Завершаем программу, если пароль неверный
+    }
 
     while (true) {  // Основной цикл программы
         try {
