@@ -4,7 +4,7 @@ CXXFLAGS = -Wall -Wextra -std=c++11
 TARGET = app.exe
 
 # Исходные файлы (только для Атбаша, Цезаря и Гронсфельда)
-SRCS = SOURCES\menu.cpp SOURCES\atbash.cpp SOURCES\cezar.cpp SOURCES\gronsfeld.cpp
+SRCS = main.cpp Atbash.cpp Cezar.cpp Gronsfeld.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 # Сборка проекта
