@@ -8,6 +8,7 @@ using namespace std;
 
 int act_cel = -1;
 string type_inp = "";
+const int LEN = 126;  // Максимальный печатный ASCII символ (~)
 
 unsigned int simple_hash(const string& str) {
     unsigned int hash = 0;
@@ -51,11 +52,11 @@ int main() {
         int choice;
         cin >> choice;
         if (choice == 0) break;
+        cin.ignore();
 
         string text;
         cout << "Input: console(1) or file(2)\n> ";
-        cin >> type_inp;
-        cin.ignore();
+        getline(cin, type_inp);
         
         if (type_inp == "1") {
             cout << "Enter text:\n> ";
@@ -64,10 +65,14 @@ int main() {
         else if (type_inp == "2") {
             cout << "Filename:\n> ";
             string filename;
-            cin >> filename;
-            cin.ignore();
+            getline(cin, filename);
             ifstream file(filename);
-            getline(file, text, '\0');
+            if (file) {
+                getline(file, text, '\0');
+            } else {
+                cerr << "File error!\n";
+                continue;
+            }
         }
 
         cout << "Encrypt(1) or Decrypt(2)\n> ";
@@ -80,7 +85,7 @@ int main() {
             case 3: gronsfeld(text); break;
         }
 
-        cout << "\nResult:\n" << text << "\n\nPress Enter...";
+        cout << "\nPress Enter...";
         cin.get();
     }
     return 0;
