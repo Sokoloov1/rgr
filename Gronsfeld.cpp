@@ -1,49 +1,56 @@
 #include "functions.h"
+#include <iostream>
+#include <fstream>
+#include <algorithm>
 
 using namespace std;
 
-int funMod(int simbl, int numkey, int quaAlp) {
-    int sunNum = simbl + numkey;
-    return sunNum % quaAlp;
+const string DEFAULT_KEY = "12945";
+
+int charToDigit(char c) {
+    return isdigit(c) ? c - '0' : 0;
 }
 
-string funCrypGro(string word, string key) {
-    string cryp_word;
-    for (size_t i = 0; i < word.size(); i++) {
-        int value = funMod(word[i], key[i % key.size()] - 48, LEN);
-        cryp_word.push_back(value < 33 ? value + 33 : value);
-    }
-    return cryp_word;
-}
-
-string funEncrypGro(string word, string key) {
-    string encryp_word;
-    for (size_t i = 0; i < word.size(); i++) {
-        int key_val = key[i % key.size()] - 48;
-        int value = word[i] - key_val;
-        encryp_word.push_back(value < 32 ? -1 - (33 - value) + 1 : value);
-    }
-    return encryp_word;
-}
-
-void gronsfeld(string data) {
-    string newWord = data;
-    cout << "Gronsfeld" << endl;
-    string key = "12945";
+char processGronsfeldChar(char c, int key_digit, bool encrypt) {
+    if (!isprint(c)) return c;
     
-    if (act_cel == 0) {
-        newWord = funCrypGro(data, key);
-    } else if (act_cel == 1) {
-        newWord = funEncrypGro(newWord, key);
+    int shift = encrypt ? key_digit : -key_digit;
+    int result = c + shift;
+    
+    // Коррекция для печатных символов (33-126)
+    const int MIN_PRINT = 33;
+    result = MIN_PRINT + (result - MIN_PRINT + 94) % 94;
+    return static_cast<char>(result);
+}
+
+void gronsfeld(string& data) {
+    cout << "Gronsfeld Cipher\n";
+    
+    string key;
+    cout << "Enter key (digits only, empty for default): ";
+    getline(cin, key);
+    
+    if (key.empty()) key = DEFAULT_KEY;
+    key.erase(remove_if(key.begin(), key.end(), 
+             [](char c) { return !isdigit(c); }), key.end());
+    if (key.empty()) key = DEFAULT_KEY;
+
+    string result;
+    for (size_t i = 0; i < data.size(); ++i) {
+        int key_digit = charToDigit(key[i % key.size()]);
+        result += processGronsfeldChar(data[i], key_digit, act_cel == 0);
     }
 
     if (type_inp == "1") {
-        cout << (act_cel == 0 ? "The encoded message: " : "The decoded message: ") << newWord << endl;
+        cout << (act_cel == 0 ? "Encoded: " : "Decoded: ") << result << endl;
     } else {
-        ofstream File(act_cel == 0 ? "ciphertext.txt" : "deciphertext.txt");
-        File << newWord;
-        File.close();
-        cout << "File created" << endl;
+        string filename = act_cel == 0 ? "ciphertext.txt" : "deciphertext.txt";
+        ofstream file(filename);
+        if (file) {
+            file << result;
+            cout << "File saved: " << filename << endl;
+        } else {
+            cerr << "Error creating file!" << endl;
+        }
     }
-    act_cel = -1;
 }
