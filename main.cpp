@@ -1,13 +1,133 @@
 #include <iostream>
 #include <string>
-#include <windows.h>  
-#include <fstream>    // Для работы с файлами
-#include <stdexcept>  // Для обработки исключений
+#include <windows.h>
+#include <functional>
+#include "functions.h"
+#include <iomanip>
+#include <fstream>  // Для работы с файлами
+#include <stdexcept> // Для работы с исключениями
 
 using namespace std;
 
-// Функция для простого хэширования пароля
-unsigned int simple_hash(const string& str) {
+unsigned int simple_hash(const string &str);
+bool is_password_correct();
+string read_file(const string& filename);
+int act_cel = -1;
+string type_inp = "";
+int LEN = 255;
+
+int main() {
+    SetConsoleCP(1251);
+    SetConsoleOutputCP(1251);
+    if(!is_password_correct()) return 0;
+    while (true) {
+        try {
+            int num_method;
+            string content, nl;
+            bool error = true;
+            system ("cls");
+            cout << "Select encryption method:\n"
+                 << "1 - ROT1\n"
+                 << "2 - A1Z26\n"
+                 << "3 - Elgamal\n"
+                 << "4 - Atbash\n"
+                 << "2 - Cezar\n"
+                 << "3 - Gronsfeld\n"
+                 << "Choice: ";
+            cin >> num_method;
+            getline(cin, nl);
+            cout << "Select input type: console(1) or file(2)" << endl << "Choice: ";
+            getline(cin, type_inp);
+            if (type_inp == "1") {
+                cout << "Enter text: ";
+                getline(cin, content);
+            } else if (type_inp == "2") {
+                string filename;
+                cout << "Input file name: ";
+                cin >> filename;
+                content = read_file(filename);
+
+                if (content.empty()) {
+                    cout << "File not found or error reading file. Try again." << endl;
+                    continue;
+                }
+            } else {
+                error = false;
+                cout << "You must make correct choice" << endl;
+            }
+
+            if (error) {
+                int var;
+                cout << "Select the type of operation: encrypt(1) or decrypt(2)" << endl << "Choice: ";
+                cin >> var;
+                cout << endl;
+                act_cel = (var == 1) ? 0 : 1;
+                cout << "Method: ";
+                switch (num_method) {
+                    case 1: rot1(content); break;
+                    case 2: a1z26(content); break;
+                    case 3: elgamal(content); break;
+                    case 4: atbash(content); break;
+                    case 5: cezar(content); break;
+                    case 6: gronsfeld(content); break;
+                    default:
+                        cout << "Invalid choice. Try again." << endl;
+                        continue;
+                }
+            }
+            char exit = ' ';
+            while (true){
+                cout << "Do you want to exit? (Y/N): ";
+                
+                cin >> exit;
+                if (exit == 'Y' || exit == 'N') break;
+                system ("cls");
+            }
+            if (exit == 'Y') break;
+        }
+        catch (const exception& e){
+            cout << "Unexpected error: " << e.what() << endl;
+        }
+        
+    }
+}
+
+// Функция проверки пароля на корректность
+bool is_password_correct() {
+    const unsigned int stored_hash = 1216985755;
+    int attempts = 0;
+    const int max_attempts = 3;
+
+    // Обработка ввода пароля с исключениями
+    try {
+        while (attempts < max_attempts) {
+            string input_password;
+            cout << "Enter your password: ";
+            cin >> input_password;
+
+            if (cin.fail()) {
+                throw invalid_argument("Invalid input. Please enter a valid password.");
+            }
+
+            unsigned int input_hash = simple_hash(input_password); 
+            if (stored_hash == input_hash) {
+                cout << "Access granted!" << endl;
+                return true;
+            } else {
+                attempts++;
+                cout << "Wrong password! Number of attempts: " << (max_attempts - attempts) << endl;
+            }
+        }
+        cout << "The number of attempts has been exceeded. Access denied!" << endl;
+        return false;
+    } catch (const invalid_argument& e) {
+        cout << e.what() << endl;
+        return false;
+    }
+}
+
+// Функция для простого хэширования пароля с помощью XOR и сложения
+unsigned int simple_hash(const string &str) {
     unsigned int hash = 0;
     for (char c : str) {
         hash = hash * 31 + c; // Хэширование с помощью умножения и сложения
@@ -15,175 +135,16 @@ unsigned int simple_hash(const string& str) {
     return hash;
 }
 
-// Функция для проверки пароля
-bool is_password_correct() {
-    const string correct_password = "mypassword";  // Постоянный пароль
-    int attempts = 0;
-    const int max_attempts = 3;
-
-    while (attempts < max_attempts) {
-        string input_password;
-        cout << "Enter your password: ";
-        cin >> input_password;
-
-        if (input_password == correct_password) {  // Сравниваем введенный пароль с правильным
-            cout << "Access granted!\n";
-            return true;
-        } else {
-            attempts++;
-            cout << "Wrong password! Number of attempts: " << (max_attempts - attempts) << "\n";
-        }
-    }
-
-    cout << "The number of attempts has been exceeded. Access denied!\n";
-    return false;
-}
-
-// Функция для шифрования/дешифрования методом Атбаш
-string atbash(const string& text) {
-    string result;
-    for (char c : text) {
-        if (isalpha(c)) {  // Проверяем, является ли символ буквой
-            char base = isupper(c) ? 'A' : 'a';  // Определяем базовый символ (A для заглавных, a для строчных)
-            result += static_cast<char>(base + 25 - (c - base));  // Преобразуем символ по правилу Атбаша
-        } else {
-            result += c;  // Если символ не буква, оставляем его без изменений
-        }
-    }
-    return result;
-}
-
-// Функция для шифрования/дешифрования методом Цезаря
-string caesar(const string& text, int shift) {
-    string result;
-    for (char c : text) {
-        if (isalpha(c)) {  // Проверяем, является ли символ буквой
-            char base = isupper(c) ? 'A' : 'a';  // Определяем базовый символ
-            // Применяем сдвиг и учитываем зацикливание алфавита
-            result += static_cast<char>((c - base + shift + 26) % 26 + base);
-        } else {
-            result += c;  // Если символ не буква, оставляем его без изменений
-        }
-    }
-    return result;
-}
-
-// Функция для шифрования/дешифрования методом Гронсфельда
-string gronsfeld(const string& text, const string& key) {
-    string result;
-    for (size_t i = 0; i < text.size(); ++i) {
-        char c = text[i];
-        if (isalpha(c)) {  // Проверяем, является ли символ буквой
-            char base = isupper(c) ? 'A' : 'a';  // Определяем базовый символ
-            int shift = key[i % key.size()] - '0';  // Получаем сдвиг из ключа (цифра)
-            // Применяем сдвиг и учитываем зацикливание алфавита
-            result += static_cast<char>((c - base + shift + 26) % 26 + base);
-        } else {
-            result += c;  // Если символ не буква, оставляем его без изменений
-        }
-    }
-    return result;
-}
-
-// Функция для чтения содержимого файла
+// Функция для чтения содержимого файла с обработкой ошибок
 string read_file(const string& filename) {
-    ifstream file(filename);  // Открываем файл для чтения
-    if (!file.is_open()) {  // Проверяем, удалось ли открыть файл
-        throw runtime_error("File not found or could not be opened.");  // Если нет, выбрасываем исключение
+    ifstream file(filename);
+    if (!file.is_open()) {
+        throw runtime_error("File not found or could not be opened.");
     }
-    // Читаем всё содержимое файла в строку
+
     string content((istreambuf_iterator<char>(file)), (istreambuf_iterator<char>()));
-    file.close();  // Закрываем файл
+    file.close();
+
     return content;
 }
 
-int main() {
-    // Устанавливаем кодировку консоли для корректного отображения русских символов
-    SetConsoleCP(1251);
-    SetConsoleOutputCP(1251);
-
-    // Проверка пароля
-    if (!is_password_correct()) {
-        return 0; // Завершаем программу, если пароль неверный
-    }
-
-    while (true) {  // Основной цикл программы
-        try {
-            int num_method;
-            string content, nl;
-            system("cls");  // Очищаем консоль
-            cout << "Select encryption method:\n"
-                 << "1 - Atbash\n"
-                 << "2 - Caesar\n"
-                 << "3 - Gronsfeld\n"
-                 << "Choice: ";
-            cin >> num_method;  // Пользователь выбирает метод шифрования
-            getline(cin, nl);  // Очищаем буфер ввода
-
-            cout << "Select input type: console(1) or file(2)\nChoice: ";
-            string type_inp;
-            getline(cin, type_inp);  // Пользователь выбирает тип ввода
-
-            if (type_inp == "1") {  // Ввод текста через консоль
-                cout << "Enter text: ";
-                getline(cin, content);
-            } else if (type_inp == "2") {  // Ввод текста из файла
-                string filename;
-                cout << "Input file name: ";
-                cin >> filename;
-                content = read_file(filename);  // Читаем содержимое файла
-                if (content.empty()) {
-                    cout << "File not found or error reading file. Try again.\n";
-                    continue;  // Если файл пуст, возвращаемся в начало цикла
-                }
-            } else {
-                cout << "Invalid choice. Try again.\n";
-                continue;  // Если ввод некорректен, возвращаемся в начало цикла
-            }
-
-            int var;
-            cout << "Select the type of operation: encrypt(1) or decrypt(2)\nChoice: ";
-            cin >> var;  // Пользователь выбирает операцию (шифрование или дешифрование)
-            cin.ignore();  // Очищаем буфер ввода
-
-            string result;
-            switch (num_method) {
-                case 1:  // Атбаш
-                    result = atbash(content);
-                    break;
-                case 2:  // Цезарь
-                    int shift;
-                    cout << "Enter shift value: ";
-                    cin >> shift;  // Пользователь вводит сдвиг для шифра Цезаря
-                    cin.ignore();
-                    result = caesar(content, (var == 1) ? shift : -shift);  // Шифруем или дешифруем
-                    break;
-                case 3:  // Гронсфельд
-                    string key;
-                    cout << "Enter key (digits only): ";
-                    cin >> key;  // Пользователь вводит ключ для шифра Гронсфельда
-                    cin.ignore();
-                    result = gronsfeld(content, key);
-                    break;
-                default:
-                    cout << "Invalid choice. Try again.\n";
-                    continue;  // Если метод выбран некорректно, возвращаемся в начало цикла
-            }
-
-            cout << "Result: " << result << "\n";  // Выводим результат
-
-            char exit;
-            while (true) {
-                cout << "Do you want to exit? (Y/N): ";
-                cin >> exit;
-                if (exit == 'Y' || exit == 'N') break;  // Пользователь выбирает, выйти или продолжить
-                system("cls");
-            }
-            if (exit == 'Y') break;  // Выход из программы
-        } catch (const exception& e) {
-            cout << "Unexpected error: " << e.what() << endl;  // Обработка исключений
-        }
-    }
-
-    return 0;
-}
