@@ -1,27 +1,21 @@
-# Компилятор и флаги
 CXX = g++
-CXXFLAGS = -Wall -Wextra -std=c++11
+CXXFLAGS = -Wall -Wextra -std=c++11 -I.
 TARGET = app.exe
-
-# Исходные файлы (только для Атбаша, Цезаря и Гронсфельда)
-SRCS = main.cpp Atbash.cpp Cezar.cpp Gronsfeld.cpp
+SRCS = main.cpp functions.cpp
 OBJS = $(SRCS:.cpp=.o)
 
-# Сборка проекта
 all: $(TARGET)
 
-# Создание исполняемого файла
 $(TARGET): $(OBJS)
 	$(CXX) $(CXXFLAGS) $^ -o $@
-	del $(OBJS)
-	cls
+	@del $(OBJS) 2> nul || true
+	@cls
 
-# Компиляция каждого .cpp файла в .o
-%.o: %..cpp
+%.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
-# Очистка
 clean:
-	del $(OBJS)
-	del $(TARGET)
+	@del $(OBJS) $(TARGET) 2> nul || true
+	@cls
+
 .PHONY: all clean
