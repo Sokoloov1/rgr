@@ -1,7 +1,7 @@
 CXX = g++
 CXXFLAGS = -Wall -Wextra -std=c++11 -I.
 TARGET = app.exe
-SRCS = main.cpp functions.cpp
+SRCS = main.cpp Atbash.cpp Cezar.cpp Gronsfeld.cpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(TARGET)
