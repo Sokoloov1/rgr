@@ -2,21 +2,13 @@
 #define FUNCTIONS_H
 
 #include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <cmath>
-#include <algorithm>
-
 using namespace std;
 
+void atbash(string& data);
+void cezar(string& data);
+void gronsfeld(string& data);
 
-void gronsfeld(string data);
-void cezar(string data);
-void atbash(string data);
+extern int act_cel;  // 0=шифрование, 1=дешифрование
+extern string type_inp;  // "1"=консоль, "2"=файл
 
-extern int act_cel;
-extern string type_inp;
-extern int LEN;
 #endif
